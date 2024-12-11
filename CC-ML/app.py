@@ -11,16 +11,15 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', '123456789')
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "auth.json" 
-GCS_BUCKET_NAME = os.getenv('GCS_BUCKET_NAME', 'alkaa')
+GCS_BUCKET_NAME = os.getenv('GCS_BUCKET_NAME', 'mandoor_bucket')
 
 def get_db_connection():
     return mysql.connector.connect(
-        host=os.getenv('DB_HOST', '34.101.96.71'),
+        host=os.getenv('DB_HOST', '34.101.86.126'),
         user=os.getenv('DB_USER', 'root'),
-        password=os.getenv('DB_PASSWORD', '123'),
+        password=os.getenv('DB_PASSWORD', 'cpmandoor'),
         database=os.getenv('DB_NAME', 'ProjectMandor')
     )
-    
 
 def token_required(f):
     @wraps(f)
@@ -55,46 +54,42 @@ def upload_to_gcs(file):
 def create_or_update_survey():
     try:
         userId = request.userId
-        Budget = request.form.get('Budget')
-        Deskripsi = request.form.get('Deskripsi')
-        Alamat = request.form.get('Alamat')  # Digunakan sebagai "jangkauan"
-        Tanggal = request.form.get('Tanggal')
         Rating = request.form.get('Rating')
         Pengalaman = request.form.get('Pengalaman')
         Portofolio = request.form.get('Portofolio')
-        layanan_lain = request.form.get('layanan_lain')  # Input layanan_lain untuk filtering
+        layanan_lain = request.form.get('layanan_lain')
+        Budget = request.form.get('Budget')
+        Deskripsi = request.form.get('Deskripsi')
+        Alamat = request.form.get('Alamat')
+        Tanggal = request.form.get('Tanggal')
         file = request.files.get('image')
 
-        # Validasi input
         if not all([Budget, Deskripsi, Alamat, Tanggal, Rating, Pengalaman, Portofolio]):
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Proses data untuk filtering mandor
         input_data = {
-            "layanan_lain": layanan_lain,  # Hanya untuk filtering
+            "layanan_lain": layanan_lain,
             "jangkauan": Alamat,
             "rating_user": Rating,
             "pengalaman": Pengalaman,
             "portofolio": Portofolio,
         }
-        filtered_mandors = process_data(input_data)  # Fungsi ini mengolah data untuk mendapatkan mandor yang sesuai
+        filtered_mandors = process_data(input_data)
         filtered_mandors_str = ",".join(filtered_mandors)
 
-        # Upload foto ke Google Cloud Storage jika ada
         foto_url = None
         if file:
             foto_url = upload_to_gcs(file)
 
-        # Koneksi ke database
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Cek apakah survey untuk user ini sudah ada
         cursor.execute("SELECT * FROM Surveys WHERE UserID = %s", (userId,))
         existing_survey = cursor.fetchone()
+        
+        app.logger.info(f"Data diterima: Budget={Budget}, Deskripsi={Deskripsi}, Alamat={Alamat}, Tanggal={Tanggal}")
 
         if existing_survey:
-            # Update survey jika sudah ada
             cursor.execute("""
                 UPDATE Surveys 
                 SET Budget = %s, Deskripsi = %s, Alamat = %s, Tanggal = %s, 
@@ -103,19 +98,16 @@ def create_or_update_survey():
             """, (Budget, Deskripsi, Alamat, Tanggal, filtered_mandors_str, foto_url, userId))
             message = "Survey updated successfully"
         else:
-            # Buat survey baru jika belum ada
             cursor.execute("""
                 INSERT INTO Surveys (UserID, Budget, Deskripsi, Alamat, Tanggal, FilteredMandors, Foto)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (userId, Budget, Deskripsi, Alamat, Tanggal, filtered_mandors_str, foto_url))
             message = "Survey created successfully"
 
-        # Commit perubahan
         conn.commit()
         cursor.close()
         conn.close()
 
-        # Response berhasil
         return jsonify({"message": message, "FilteredMandors": filtered_mandors_str}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -139,4 +131,4 @@ def get_surveys():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, threaded=True)
+    app.run(debug=True, threaded=True, host='0.0.0.0', port=8080)
