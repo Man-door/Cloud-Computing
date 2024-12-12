@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
+router.get('/', (req, res) => {
+    res.status(200).json(beritaTerkini);
+});
+
 const beritaTerkini = {
     status: "ok",
     totalResults: 5,
@@ -42,9 +46,5 @@ const beritaTerkini = {
         }
     ]
 };
-
-router.get('/', (req, res) => {
-    res.status(200).json(beritaTerkini);
-});
 
 module.exports = router;

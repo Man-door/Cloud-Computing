@@ -15,9 +15,9 @@ GCS_BUCKET_NAME = os.getenv('GCS_BUCKET_NAME', 'mandoor_bucket')
 
 def get_db_connection():
     return mysql.connector.connect(
-        host=os.getenv('DB_HOST', '34.101.86.126'),
+        host=os.getenv('DB_HOST', 'localhost'),
         user=os.getenv('DB_USER', 'root'),
-        password=os.getenv('DB_PASSWORD', 'cpmandoor'),
+        password=os.getenv('DB_PASSWORD', ''),
         database=os.getenv('DB_NAME', 'ProjectMandor')
     )
 

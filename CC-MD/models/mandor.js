@@ -60,7 +60,11 @@ module.exports = (sequelize, DataTypes) => {
     total_proyek: {
       type: DataTypes.INTEGER,
       allowNull: true,
-    }
+    },
+    rating: {
+      type: DataTypes.STRING,
+      allowNull: true,
+  }
   },
   {
     timestamps: false,

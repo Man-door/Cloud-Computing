@@ -7,9 +7,9 @@ import numpy as np
 
 def read_data_from_db():
     db = mysql.connect(
-        host="34.101.86.126",
+        host="localhost",
         user="root",
-        password="cpmandoor",
+        password="",
         database="ProjectMandor"
     )
     query = "SELECT * FROM Mandors"
@@ -63,7 +63,7 @@ def process_data(data):
     history = model.fit(
         [X_services, X_locations, X_rating_user, X_pengalaman, X_portofolio],
         np.ones(X_services.shape[0]),
-        epochs=5,
+        epochs=2,
         batch_size=32,
         validation_data=([X_services, X_locations, X_rating_user, X_pengalaman, X_portofolio], np.ones(X_services.shape[0])),
         verbose=1

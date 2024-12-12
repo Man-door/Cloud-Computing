@@ -13,8 +13,8 @@ app.use('/login', loginUserRoute);
 app.use('/news', newsRoute);
 app.use('/filtermandor', filterRoute);
 
-const PORT = process.env.PORT || 8080;
-const HOST = '0.0.0.0'; 
+const PORT = process.env.PORT || 3000;
+const HOST = 'localhost'; 
 
 db.sequelize.sync()
   .then(() => {
